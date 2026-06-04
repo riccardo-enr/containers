@@ -1,0 +1,15 @@
+# --- mavsdk-python: MAVSDK Python bindings --------------------------------
+# Noble (24.04) ships pip with PEP 668 "externally managed" enforcement, so
+# system installs need --break-system-packages. Jammy's (22.04) older pip
+# neither has that flag nor needs it.
+{% if ubuntu_version == "24.04" %}
+RUN pip3 install --no-cache-dir --break-system-packages \
+        mavsdk \
+        aioconsole \
+        pymavlink
+{% else %}
+RUN pip3 install --no-cache-dir \
+        mavsdk \
+        aioconsole \
+        pymavlink
+{% endif %}

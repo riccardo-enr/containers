@@ -1,0 +1,14 @@
+# --- bootstrap: base packages, locale, common tooling ---------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        git \
+        gnupg2 \
+        locales \
+        lsb-release \
+        software-properties-common \
+        sudo \
+        wget \
+    && locale-gen en_US en_US.UTF-8 \
+    && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*

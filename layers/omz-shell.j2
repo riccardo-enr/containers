@@ -1,0 +1,10 @@
+# --- omz-shell: zsh + oh-my-zsh for {{ username }} -------------------------
+# Runs after the USER switch, so apt goes through the user's NOPASSWD sudo.
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+        zsh \
+    && sudo rm -rf /var/lib/apt/lists/* \
+    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+        "" --unattended \
+    && echo "source /opt/ros/{{ ros_distro }}/setup.zsh" >> /home/{{ username }}/.zshrc
+
+ENV SHELL=/usr/bin/zsh

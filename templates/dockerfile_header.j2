@@ -1,0 +1,14 @@
+# syntax=docker/dockerfile:1
+#
+# GENERATED FILE - do not edit by hand.
+# Profile : {{ profile_name }}
+# Source  : config.yml + layers/*.j2
+# Regenerate with: python generate.py {{ profile_name }} --write
+#
+# {{ description }}
+
+FROM {{ base }}
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO={{ ros_distro }}
+ENV LANG=en_US.UTF-8

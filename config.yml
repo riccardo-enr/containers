@@ -1,1 +1,80 @@
-# Test
+# config.yml
+#
+# Three orthogonal axes compose into Dockerfiles:
+#
+#   distro   (jazzy|humble)  -> ROS distro + its Ubuntu/CUDA pairing
+#   hardware (cpu|gpu)        -> base image family + GPU-only layers
+#   stack    (ros2-desktop|px4-sitl) -> the ordered layer recipe
+#
+# The base image is a function of BOTH distro and hardware:
+#   cpu -> ubuntu:<ubuntu_version>
+#   gpu -> nvidia/cuda:<cuda_version>-runtime-ubuntu<ubuntu_version>
+# CUDA versions are NOT symmetric across Ubuntu releases: Noble (24.04) needs
+# CUDA >= 12.5, so cuda_version lives on the distro axis. 12.6.3 covers both.
+#
+# A `target` is an explicit (stack, distro, hardware) triple, so you only build
+# the combinations you actually want -- not the full cartesian product.
+
+# --- Axis 1: ROS distro -> Ubuntu / CUDA pairing --------------------------
+distros:
+  jazzy:
+    ros_distro: jazzy
+    ubuntu_codename: noble
+    ubuntu_version: "24.04"
+    cuda_version: "12.6.3"
+  humble:
+    ros_distro: humble
+    ubuntu_codename: jammy
+    ubuntu_version: "22.04"
+    cuda_version: "12.6.3"
+
+# --- Axis 2: hardware -> base image template + extra layers ----------------
+# `base` is itself a Jinja string rendered with the merged context.
+# `layers` are GPU/CPU-only layers inserted right after the header.
+hardware:
+  cpu:
+    base: "ubuntu:{{ ubuntu_version }}"
+    layers: []
+  gpu:
+    base: "nvidia/cuda:{{ cuda_version }}-runtime-ubuntu{{ ubuntu_version }}"
+    layers:
+      - nvidia-env
+
+# --- Axis 3: stack -> ordered layer recipe --------------------------------
+stacks:
+  ros2-desktop:
+    description: "ROS 2 {{ ros_distro }} desktop ({{ hardware }}), fzf + oh-my-zsh."
+    layers:
+      - bootstrap
+      - ros2-repo
+      - ros2-desktop
+      - rosdep-init
+      - fzf-shell
+      - ros-user
+      - omz-shell
+  px4-sitl:
+    description: "ROS 2 {{ ros_distro }} + PX4 SITL toolchain + MAVSDK ({{ hardware }})."
+    layers:
+      - bootstrap
+      - ros2-repo
+      - ros2-desktop
+      - rosdep-init
+      - px4-deps
+      - mavsdk-python
+      - ros-user
+      - omz-shell
+
+# Template args shared by every target.
+defaults:
+  username: ros
+
+# --- Targets: the (stack, distro, hardware) triples to generate -----------
+# Default coverage: ros2-desktop on all four distro x hardware cells, plus
+# px4-sitl CPU-only (GPU SITL is untested). Add/remove freely.
+targets:
+  - { stack: ros2-desktop, distro: jazzy,  hardware: cpu }
+  - { stack: ros2-desktop, distro: jazzy,  hardware: gpu }
+  - { stack: ros2-desktop, distro: humble, hardware: cpu }
+  - { stack: ros2-desktop, distro: humble, hardware: gpu }
+  - { stack: px4-sitl,     distro: jazzy,  hardware: cpu }
+  - { stack: px4-sitl,     distro: humble, hardware: cpu }

@@ -1,0 +1,27 @@
+// .devcontainer/devcontainer.json for a CONSUMER repo (GPU image).
+//
+// Same as the CPU example, but passes the NVIDIA GPU into the container at
+// runtime. Requires the NVIDIA Container Toolkit installed on the host.
+// The image already sets NVIDIA_VISIBLE_DEVICES via the nvidia-env layer.
+{
+  "name": "ros2-desktop (jazzy, gpu)",
+  "image": "ros2-desktop:jazzy-gpu",
+
+  // --gpus all is what `docker run --gpus all` does; without it the container
+  // starts but sees no GPU.
+  "runArgs": ["--gpus", "all"],
+
+  "remoteUser": "ros",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "ms-iot.vscode-ros"
+      ]
+    }
+  }
+}

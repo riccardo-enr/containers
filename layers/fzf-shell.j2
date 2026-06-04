@@ -1,0 +1,6 @@
+# --- fzf-shell: fuzzy finder for shell history/search ---------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        fzf \
+        ripgrep \
+        fd-find \
+    && rm -rf /var/lib/apt/lists/*

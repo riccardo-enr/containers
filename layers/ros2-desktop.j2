@@ -1,0 +1,8 @@
+# --- ros2-desktop: install ROS 2 {{ ros_distro }} desktop + build tools ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ros-{{ ros_distro }}-desktop \
+        ros-dev-tools \
+        python3-colcon-common-extensions \
+        python3-rosdep \
+        python3-vcstool \
+    && rm -rf /var/lib/apt/lists/*
