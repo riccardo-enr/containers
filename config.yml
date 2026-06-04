@@ -76,6 +76,7 @@ stacks:
     base_stack: ros2-base
     layers:
       - px4-deps
+      - px4-source
       - mavsdk-python
       - gz-sim
       - ros-user

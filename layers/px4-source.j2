@@ -1,0 +1,6 @@
+# --- px4-source: clone and bootstrap PX4-Autopilot firmware ---------------
+RUN git clone --depth 1 --recurse-submodules --shallow-submodules \
+        https://github.com/PX4/PX4-Autopilot.git /opt/px4 \
+    && cd /opt/px4 \
+    && bash Tools/setup/ubuntu.sh --no-nuttx \
+    && rm -rf /var/lib/apt/lists/*
