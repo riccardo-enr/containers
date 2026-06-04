@@ -8,8 +8,11 @@
 # unchanged layers so rebuilds are cheap.
 #
 # Usage:
-#   ./build.sh                          # generate + build all targets
-#   ./build.sh ros2-desktop-jazzy-gpu-devel   # build a single target by name
+#   ./build.sh                              # build all targets
+#   ./build.sh ros2-desktop-jazzy-gpu-devel  # build a single target by name
+#   ./build.sh --hardware cpu               # build only cpu targets
+#   ./build.sh --hardware gpu               # build only gpu targets
+#   ./build.sh --hardware gpu-devel         # build only gpu-devel targets
 #
 # Image naming comes from `generate.py --tags` (authoritative), e.g.
 #   ros2-desktop-jazzy-gpu-devel  ->  ros2-desktop:jazzy-gpu-devel
@@ -31,7 +34,25 @@ build_one() {
     docker build -t "$tag" "$dir"
 }
 
-want="${1:-}"
+want=""
+hw_filter=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --hardware)
+            hw_filter="${2:-}"
+            [ -n "$hw_filter" ] || { echo "--hardware requires a value (cpu|gpu|gpu-devel)" >&2; exit 1; }
+            shift 2
+            ;;
+        -*)
+            echo "unknown option: $1  (see usage in header)" >&2; exit 1
+            ;;
+        *)
+            want="$1"
+            shift
+            ;;
+    esac
+done
 
 # `generate.py --tags` prints "<output-name> <image-tag> <base-target|->" per
 # target, in build order (base images first). Load it into maps so we can build
@@ -56,16 +77,30 @@ build_target() {  # build a target's base chain first, then the target (once).
     BUILT["$name"]=1
 }
 
+# A target matches if it ends with -<hw_filter> (exact hardware suffix).
+matches_hw() {
+    local name="$1"
+    [[ "$name" == *"-${hw_filter}" ]]
+}
+
 found=0
 for name in "${names[@]}"; do
-    if [ -z "$want" ] || [ "$want" = "$name" ]; then
-        build_target "$name"
-        found=1
+    if [ -n "$want" ]; then
+        [ "$want" = "$name" ] || continue
+    elif [ -n "$hw_filter" ]; then
+        matches_hw "$name" || continue
     fi
+    build_target "$name"
+    found=1
 done
 
 if [ -n "$want" ] && [ "$found" -eq 0 ]; then
     echo "no such target: $want  (see: uv run python generate.py --list)" >&2
+    exit 1
+fi
+
+if [ -n "$hw_filter" ] && [ "$found" -eq 0 ]; then
+    echo "no targets matched hardware: $hw_filter  (valid: cpu, gpu, gpu-devel)" >&2
     exit 1
 fi
 

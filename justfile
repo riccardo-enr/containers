@@ -35,6 +35,18 @@ build:
 build-one target:
     ./build.sh {{target}}
 
+# Build only cpu targets.
+build-cpu:
+    ./build.sh --hardware cpu
+
+# Build only gpu targets (excludes gpu-devel).
+build-gpu:
+    ./build.sh --hardware gpu
+
+# Build only gpu-devel targets.
+build-gpu-devel:
+    ./build.sh --hardware gpu-devel
+
 # Fail if output/ is stale vs config.yml + layers/ (use in CI / pre-commit).
 check:
     {{python}} generate.py --all --write
