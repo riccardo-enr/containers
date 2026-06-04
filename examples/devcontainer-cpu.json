@@ -1,18 +1,15 @@
-// .devcontainer/devcontainer.json for a CONSUMER repo (CPU image).
-//
-// Copy into the other repo's .devcontainer/ and rename to devcontainer.json.
-// References a LOCAL image built by ../build.sh -- no "build" key, so VS Code
-// never rebuilds; it just starts a container from the prebuilt image.
 {
-  "name": "ros2-desktop (humble, cpu)",
-  "image": "ros2-desktop:humble-cpu",
-
-  // Mount this repo's workspace and run as the non-root `ros` user baked
-  // into the image.
+  "name": "myproject (humble, cpu)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+      "BASE_IMAGE": "ros2-desktop:humble-cpu"
+    }
+  },
   "remoteUser": "ros",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
-
   "customizations": {
     "vscode": {
       "extensions": [
