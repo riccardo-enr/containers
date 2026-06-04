@@ -37,20 +37,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # compiles on first `make px4_sitl <model>`). Then builds the Micro-XRCE-DDS
 # Agent -- the bridge PX4 uses to talk to ROS 2 over uXRCE-DDS. The agent is
 # packaged here rather than in its own layer because it is useless without the
-# PX4 firmware it bridges. Pinned to v2.4.3 for a reproducible build; its cmake
+# PX4 firmware it bridges. Pinned to v3.0.1 for a reproducible build; its cmake
 # superbuild fetches and builds Fast-DDS, so build-essential + cmake (px4-deps)
 # are the only host prerequisites.
+#
+# The agent uses a CMake superbuild: the top-level project is `uagent_superbuild`
+# (an ExternalProject orchestrator that fetches/builds Fast-CDR + Fast-DDS, then
+# reconfigures this same build tree in place as the real, non-superbuild project).
+# It therefore has NO `install` target until the *default* target has been built
+# once. We must build the default target first, then run install -- this mirrors
+# the upstream `cmake .. && make && make install` recipe. Running install before
+# the default build fails with "No rule to make target 'install'".
 RUN git clone --depth 1 --recurse-submodules --shallow-submodules \
         https://github.com/PX4/PX4-Autopilot.git /opt/px4 \
     && cd /opt/px4 \
     && bash Tools/setup/ubuntu.sh --no-nuttx \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 --branch v2.4.3 \
+RUN git clone --depth 1 --branch v3.0.1 \
         https://github.com/eProsima/Micro-XRCE-DDS-Agent.git /tmp/xrce-agent \
     && cmake -S /tmp/xrce-agent -B /tmp/xrce-agent/build \
         -DUAGENT_BUILD_EXECUTABLE=ON \
-    && cmake --build /tmp/xrce-agent/build --target install -j "$(nproc)" \
+    && cmake --build /tmp/xrce-agent/build -j "$(nproc)" \
+    && cmake --build /tmp/xrce-agent/build --target install \
     && ldconfig /usr/local/lib/ \
     && rm -rf /tmp/xrce-agent
 
