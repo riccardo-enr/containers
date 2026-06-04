@@ -32,6 +32,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libxslt1-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# --- px4-source: clone and bootstrap PX4-Autopilot firmware ---------------
+RUN git clone --depth 1 --recurse-submodules --shallow-submodules \
+        https://github.com/PX4/PX4-Autopilot.git /opt/px4 \
+    && cd /opt/px4 \
+    && bash Tools/setup/ubuntu.sh --no-nuttx \
+    && rm -rf /var/lib/apt/lists/*
+
 # --- mavsdk-python: MAVSDK Python bindings --------------------------------
 # Noble (24.04) ships pip with PEP 668 "externally managed" enforcement, so
 # system installs need --break-system-packages. Jammy's (22.04) older pip
