@@ -47,7 +47,7 @@ images:
     docker images \
         --filter=reference='ros2-desktop:*' \
         --filter=reference='px4-sitl:*' \
-        --format 'table {{{{.Repository}}}}:{{{{.Tag}}}}\t{{{{.Size}}}}'
+        --format 'table {{{{.Repository}}:{{{{.Tag}}\t{{{{.Size}}'
 
 # Remove generated Dockerfiles.
 clean:
