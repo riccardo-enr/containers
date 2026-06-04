@@ -88,8 +88,9 @@ defaults:
 
 # --- Targets: the (stack, distro, hardware) triples to generate -----------
 # ros2-base images must be listed for every distro+hardware their children use;
-# build.sh builds them first. px4-sitl GPU images pull in the gz-sim (Gazebo)
-# layer for GPU-accelerated SITL; CPU px4 images skip it. Add/remove freely.
+# build.sh builds them first. px4-sitl images on every hardware pull in the
+# gz-sim (Gazebo) layer: GPU images render with the host driver, CPU images fall
+# back to Mesa llvmpipe software rendering. Add/remove freely.
 targets:
   # Shared base images -- built first, children FROM these.
   - { stack: ros2-base,    distro: jazzy,  hardware: cpu }
@@ -103,7 +104,7 @@ targets:
   - { stack: ros2-desktop, distro: jazzy,  hardware: gpu-devel }
   - { stack: ros2-desktop, distro: humble, hardware: cpu }
   - { stack: ros2-desktop, distro: humble, hardware: gpu }
-  # PX4 SITL: CPU (no sim) + GPU (Gazebo via the gz-sim layer).
+  # PX4 SITL: CPU (llvmpipe software sim) + GPU (hardware-accelerated Gazebo).
   - { stack: px4-sitl,     distro: jazzy,  hardware: cpu }
   - { stack: px4-sitl,     distro: jazzy,  hardware: gpu }
   - { stack: px4-sitl,     distro: humble, hardware: cpu }

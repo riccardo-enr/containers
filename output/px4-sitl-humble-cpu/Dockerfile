@@ -32,12 +32,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libxslt1-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# --- px4-source: clone and bootstrap PX4-Autopilot firmware ---------------
+# --- px4-source: clone PX4 firmware + the uXRCE-DDS agent -----------------
+# Clones PX4-Autopilot and runs its setup script (deps only; px4_sitl itself
+# compiles on first `make px4_sitl <model>`). Then builds the Micro-XRCE-DDS
+# Agent -- the bridge PX4 uses to talk to ROS 2 over uXRCE-DDS. The agent is
+# packaged here rather than in its own layer because it is useless without the
+# PX4 firmware it bridges. Pinned to v2.4.3 for a reproducible build; its cmake
+# superbuild fetches and builds Fast-DDS, so build-essential + cmake (px4-deps)
+# are the only host prerequisites.
 RUN git clone --depth 1 --recurse-submodules --shallow-submodules \
         https://github.com/PX4/PX4-Autopilot.git /opt/px4 \
     && cd /opt/px4 \
     && bash Tools/setup/ubuntu.sh --no-nuttx \
     && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 --branch v2.4.3 \
+        https://github.com/eProsima/Micro-XRCE-DDS-Agent.git /tmp/xrce-agent \
+    && cmake -S /tmp/xrce-agent -B /tmp/xrce-agent/build \
+        -DUAGENT_BUILD_EXECUTABLE=ON \
+    && cmake --build /tmp/xrce-agent/build --target install -j "$(nproc)" \
+    && ldconfig /usr/local/lib/ \
+    && rm -rf /tmp/xrce-agent
 
 # --- mavsdk-python: MAVSDK Python bindings --------------------------------
 # Noble (24.04) ships pip with PEP 668 "externally managed" enforcement, so
@@ -48,12 +63,17 @@ RUN pip3 install --no-cache-dir \
         aioconsole \
         pymavlink
 
-# --- gz-sim: Gazebo simulator for PX4 SITL (GPU-only) ---------------------
-# Gazebo is heavy and only pays off where the GPU can accelerate rendering and
-# sensor simulation, so it ships only in GPU images. ros-<distro>-ros-gz pulls
-# the Gazebo release paired with the ROS 2 distro (Harmonic on Jazzy, Fortress
-# on Humble) together with the ros_gz bridge packages.
-# (skipped: gz-sim is GPU-only; this is a cpu image)
+# --- gz-sim: Gazebo simulator for PX4 SITL --------------------------------
+# Installed on every hardware. On GPU the host driver accelerates rendering and
+# sensor simulation; on CPU it falls back to Mesa's llvmpipe software renderer
+# (export LIBGL_ALWAYS_SOFTWARE=1 at runtime) -- slower, but enough to run
+# headless SITL without a GPU. ros-<distro>-ros-gz pulls the Gazebo release
+# paired with the ROS 2 distro (Harmonic on Jazzy, Fortress on Humble) together
+# with the ros_gz bridge packages; libgl1-mesa-dri provides the llvmpipe driver.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ros-humble-ros-gz \
+        libgl1-mesa-dri \
+    && rm -rf /var/lib/apt/lists/*
 
 # --- ros-user: create a non-root user with the workspace pre-sourced ------
 ARG USERNAME=ros

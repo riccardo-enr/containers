@@ -1,12 +1,11 @@
-# --- gz-sim: Gazebo simulator for PX4 SITL (GPU-only) ---------------------
-# Gazebo is heavy and only pays off where the GPU can accelerate rendering and
-# sensor simulation, so it ships only in GPU images. ros-<distro>-ros-gz pulls
-# the Gazebo release paired with the ROS 2 distro (Harmonic on Jazzy, Fortress
-# on Humble) together with the ros_gz bridge packages.
-{% if hardware in ["gpu", "gpu-devel"] %}
+# --- gz-sim: Gazebo simulator for PX4 SITL --------------------------------
+# Installed on every hardware. On GPU the host driver accelerates rendering and
+# sensor simulation; on CPU it falls back to Mesa's llvmpipe software renderer
+# (export LIBGL_ALWAYS_SOFTWARE=1 at runtime) -- slower, but enough to run
+# headless SITL without a GPU. ros-<distro>-ros-gz pulls the Gazebo release
+# paired with the ROS 2 distro (Harmonic on Jazzy, Fortress on Humble) together
+# with the ros_gz bridge packages; libgl1-mesa-dri provides the llvmpipe driver.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ros-{{ ros_distro }}-ros-gz \
+        libgl1-mesa-dri \
     && rm -rf /var/lib/apt/lists/*
-{% else %}
-# (skipped: gz-sim is GPU-only; this is a {{ hardware }} image)
-{% endif %}
