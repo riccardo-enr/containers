@@ -97,6 +97,7 @@ def resolve_target(config, env, stack, distro, hardware):
             )
 
     hw = hardwares[hardware]
+    stack_cfg = stacks[stack]
 
     # Merge order: defaults < distro vars < hardware args < axis labels.
     context = {}
@@ -107,14 +108,30 @@ def resolve_target(config, env, stack, distro, hardware):
     context["hardware"] = hardware
     context["profile_name"] = target_name(stack, distro, hardware)
 
-    # base and description are themselves templated.
-    context["base"] = render_string(env, hw["base"], context)
+    # A stack may build FROM another stack's image (base_stack) instead of a
+    # raw OS/CUDA base. When it does, the base is that stack's image tag for the
+    # SAME distro+hardware, and the hardware layers (e.g. nvidia-env) are
+    # dropped because the base image already carries them. Otherwise the base
+    # is the hardware's templated OS/CUDA image and its layers go first.
+    base_stack = stack_cfg.get("base_stack")
+    if base_stack is not None:
+        if base_stack not in stacks:
+            raise click.ClickException(
+                f"stack '{stack}' has unknown base_stack '{base_stack}'. "
+                f"Available: {', '.join(sorted(stacks))}"
+            )
+        context["base"] = image_tag(base_stack, distro, hardware)
+        hw_layers = []
+    else:
+        context["base"] = render_string(env, hw["base"], context)
+        hw_layers = list(hw.get("layers", []))
+
+    # description is itself templated.
     context["description"] = render_string(
-        env, stacks[stack].get("description", ""), context
+        env, stack_cfg.get("description", ""), context
     )
 
-    # Hardware layers go first (e.g. nvidia-env), then the stack recipe.
-    layers = list(hw.get("layers", [])) + list(stacks[stack].get("layers", []))
+    layers = hw_layers + list(stack_cfg.get("layers", []))
     return context, layers
 
 
@@ -156,6 +173,20 @@ def all_targets(config):
         yield t["stack"], t["distro"], t["hardware"]
 
 
+def build_order(config):
+    """
+    Targets sorted so base images (stacks without base_stack) come before the
+    children that build FROM them. Stable, so config order is kept within each
+    group. Assumes single-level chaining (a base_stack is itself a base).
+    """
+    stacks = config.get("stacks", {})
+
+    def is_child(triple):
+        return 1 if stacks.get(triple[0], {}).get("base_stack") else 0
+
+    return sorted(all_targets(config), key=is_child)
+
+
 def find_target_by_name(config, name):
     """Map a 'stack-distro-hardware' string back to its triple."""
     for stack, distro, hardware in all_targets(config):
@@ -190,14 +221,19 @@ def main(target, stack, distro, hardware, all_flag, write, dry_run, list_flag, t
         return
 
     if tags_flag:
-        for s, d, h in all_targets(config):
-            click.echo(f"{target_name(s, d, h)} {image_tag(s, d, h)}")
+        # Emit "<output-name> <image-tag> <base-target|->" in build order, so
+        # build.sh builds each target's base_stack image before the target.
+        stacks = config.get("stacks", {})
+        for s, d, h in build_order(config):
+            base_stack = stacks.get(s, {}).get("base_stack")
+            base_name = target_name(base_stack, d, h) if base_stack else "-"
+            click.echo(f"{target_name(s, d, h)} {image_tag(s, d, h)} {base_name}")
         return
 
     # Resolve which triples to render.
     triples = []
     if all_flag:
-        triples = list(all_targets(config))
+        triples = build_order(config)
     elif stack and distro and hardware:
         triples = [(stack, distro, hardware)]  # ad-hoc combo, need not be listed
     elif target:

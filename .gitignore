@@ -1,4 +1,6 @@
-# Test
+# Python / uv
+.venv/
+__pycache__/
 
 # AI
 CLAUDE.md

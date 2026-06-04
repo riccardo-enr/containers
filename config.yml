@@ -47,26 +47,37 @@ hardware:
       - nvidia-env
 
 # --- Axis 3: stack -> ordered layer recipe --------------------------------
+# A stack may set `base_stack: <other-stack>` to build FROM that stack's image
+# (for the SAME distro+hardware) instead of a raw OS/CUDA base. When it does,
+# its `layers` list holds ONLY the delta on top of the base, and the base's
+# hardware layers (e.g. nvidia-env) are inherited rather than repeated.
+# Chaining is one level deep: a base_stack must itself be a plain (no base_stack)
+# stack, and must be listed as a target for every distro+hardware its children use.
 stacks:
-  ros2-desktop:
-    description: "ROS 2 {{ ros_distro }} desktop ({{ hardware }}), fzf + oh-my-zsh."
+  # Shared ROS 2 core: repo + desktop + build tools + rosdep. Stays root (no
+  # USER switch) so children can still apt-get install. Both ros2-desktop and
+  # px4-sitl build FROM this instead of repeating the core four layers.
+  ros2-base:
+    description: "ROS 2 {{ ros_distro }} core ({{ hardware }}): desktop + build tools."
     layers:
       - bootstrap
       - ros2-repo
       - ros2-desktop
       - rosdep-init
+  ros2-desktop:
+    description: "ROS 2 {{ ros_distro }} desktop ({{ hardware }}), fzf + oh-my-zsh."
+    base_stack: ros2-base
+    layers:
       - fzf-shell
       - ros-user
       - omz-shell
   px4-sitl:
     description: "ROS 2 {{ ros_distro }} + PX4 SITL toolchain + MAVSDK ({{ hardware }})."
+    base_stack: ros2-base
     layers:
-      - bootstrap
-      - ros2-repo
-      - ros2-desktop
-      - rosdep-init
       - px4-deps
       - mavsdk-python
+      - gz-sim
       - ros-user
       - omz-shell
 
@@ -75,13 +86,24 @@ defaults:
   username: ros
 
 # --- Targets: the (stack, distro, hardware) triples to generate -----------
-# Default coverage: ros2-desktop on all four distro x hardware cells, plus
-# px4-sitl CPU-only (GPU SITL is untested). Add/remove freely.
+# ros2-base images must be listed for every distro+hardware their children use;
+# build.sh builds them first. px4-sitl GPU images pull in the gz-sim (Gazebo)
+# layer for GPU-accelerated SITL; CPU px4 images skip it. Add/remove freely.
 targets:
+  # Shared base images -- built first, children FROM these.
+  - { stack: ros2-base,    distro: jazzy,  hardware: cpu }
+  - { stack: ros2-base,    distro: jazzy,  hardware: gpu }
+  - { stack: ros2-base,    distro: jazzy,  hardware: gpu-devel }
+  - { stack: ros2-base,    distro: humble, hardware: cpu }
+  - { stack: ros2-base,    distro: humble, hardware: gpu }
+  # ROS 2 desktop on every distro x hardware cell.
   - { stack: ros2-desktop, distro: jazzy,  hardware: cpu }
   - { stack: ros2-desktop, distro: jazzy,  hardware: gpu }
   - { stack: ros2-desktop, distro: jazzy,  hardware: gpu-devel }
   - { stack: ros2-desktop, distro: humble, hardware: cpu }
   - { stack: ros2-desktop, distro: humble, hardware: gpu }
+  # PX4 SITL: CPU (no sim) + GPU (Gazebo via the gz-sim layer).
   - { stack: px4-sitl,     distro: jazzy,  hardware: cpu }
+  - { stack: px4-sitl,     distro: jazzy,  hardware: gpu }
   - { stack: px4-sitl,     distro: humble, hardware: cpu }
+  - { stack: px4-sitl,     distro: humble, hardware: gpu }

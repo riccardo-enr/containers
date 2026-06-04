@@ -1,0 +1,13 @@
+[project]
+name = "containers"
+version = "0.1.0"
+description = "Template-based Dockerfile generator composing ROS 2 / PX4 images from Jinja2 layers."
+requires-python = ">=3.9"
+dependencies = [
+    "jinja2",
+    "pyyaml",
+    "click",
+]
+
+[tool.uv]
+package = false

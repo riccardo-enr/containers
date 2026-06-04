@@ -11,32 +11,34 @@ small, reusable Jinja2 layer snippets along three orthogonal axes.
 ## Installation
 
 ```bash
-pixi install        # or: pip install -r requirements.txt
+uv sync             # create the venv from pyproject.toml
 ```
 
 Dependencies: Jinja2, PyYAML, click.
 
 ## Usage
 
+Run via `uv run` (or activate the venv with `source .venv/bin/activate`):
+
 ```bash
-python generate.py --list                       # list configured targets
-python generate.py ros2-desktop-humble-cpu      # render a target to stdout
-python generate.py ros2-desktop-jazzy-gpu --write  # -> output/.../Dockerfile
-python generate.py --all --write                # regenerate every target
+uv run generate.py --list                       # list configured targets
+uv run generate.py ros2-desktop-humble-cpu      # render a target to stdout
+uv run generate.py ros2-desktop-jazzy-gpu --write  # -> output/.../Dockerfile
+uv run generate.py --all --write                # regenerate every target
 
 # ad-hoc combo that need not be in the targets list:
-python generate.py --stack px4-sitl --distro humble --hardware gpu
+uv run generate.py --stack px4-sitl --distro humble --hardware gpu
 ```
 
 ## Three axes
 
 A Dockerfile is the product of three independent choices:
 
-| Axis         | Values                     | Controls                               |
-|--------------|----------------------------|----------------------------------------|
-| **distro**   | `jazzy`, `humble`          | `ros_distro` + its Ubuntu/CUDA pairing |
-| **hardware** | `cpu`, `gpu`               | base-image family + GPU-only layers    |
-| **stack**    | `ros2-desktop`, `px4-sitl` | the ordered layer recipe               |
+| Axis         | Values                                  | Controls                               |
+|--------------|-----------------------------------------|----------------------------------------|
+| **distro**   | `jazzy`, `humble`                       | `ros_distro` + its Ubuntu/CUDA pairing |
+| **hardware** | `cpu`, `gpu`                            | base-image family + GPU-only layers    |
+| **stack**    | `ros2-base`, `ros2-desktop`, `px4-sitl` | the ordered layer recipe               |
 
 A **target** is one `(stack, distro, hardware)` triple. The base image is a
 function of *both* distro and hardware:
@@ -49,9 +51,20 @@ gpu -> nvidia/cuda:<cuda_version>-runtime-ubuntu<ubuntu_version>
 CUDA/Ubuntu pairings are not symmetric: Noble (24.04) needs CUDA >= 12.5, so
 `cuda_version` lives on the **distro** axis (`12.6.3` covers both 22.04/24.04).
 
+**Image reuse.** A stack can set `base_stack: <other-stack>` to build `FROM`
+that stack's image instead of a raw OS/CUDA base. `ros2-base` holds the shared
+ROS 2 core (repo + desktop + build tools + rosdep); both `ros2-desktop` and
+`px4-sitl` build on top of it and add only their delta, so the core is defined
+once. (BuildKit already cache-shares identical layers across builds; `base_stack`
+makes the sharing explicit and keeps the Dockerfiles small.) Chaining is one
+level deep, and a `base_stack` must be listed as a target for every
+distro+hardware its children use -- `build.sh` builds bases first.
+
 `targets:` in `config.yml` lists exactly which triples to build, so you avoid
-an unwanted full 2x2x2 product. Default coverage: `ros2-desktop` on all four
-distro x hardware cells, plus `px4-sitl` CPU-only.
+an unwanted full product. Default coverage: `ros2-base` + `ros2-desktop` on the
+distro x hardware cells, and `px4-sitl` on CPU and GPU. The `px4-sitl` GPU
+images add the `gz-sim` layer (Gazebo, paired with the ROS distro) for
+GPU-accelerated SITL; the CPU images skip it since nothing there uses the GPU.
 
 ## How it works
 
@@ -60,6 +73,7 @@ config.yml        distros + hardware + stacks + targets
 layers/*.j2       one Jinja2 snippet per logical Dockerfile block
 templates/        the Dockerfile header (FROM, ENV, ARG)
 generate.py       merges axis context, renders header + hw layers + stack layers
+                  (a stack with base_stack uses that image as FROM, no hw layers)
 output/<stack>-<distro>-<hardware>/Dockerfile   generated, do-not-edit result
 ```
 
@@ -77,6 +91,8 @@ from the merged context fails loudly instead of emitting an empty string.
 - **New distro** (e.g. `rolling`): add an entry under `distros:` with its
   `ros_distro` / `ubuntu_codename` / `ubuntu_version` / `cuda_version`.
 - **New stack**: add an entry under `stacks:` with an ordered `layers:` list.
+  Optionally set `base_stack:` to build `FROM` another stack's image (and list
+  that base as a target for every distro+hardware the new stack uses).
 - **New layer**: drop `layers/<name>.j2` in and reference it from a stack or
   the hardware axis.
 - **New target**: add a `{ stack, distro, hardware }` line under `targets:`.

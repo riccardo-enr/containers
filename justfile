@@ -1,7 +1,7 @@
 # justfile - common tasks for the container image factory.
 # Run `just` (or `just --list`) to see all recipes.
 
-python := "python3"
+python := "uv run python"
 
 # Show available recipes.
 default:
@@ -45,6 +45,7 @@ check:
 # List the local images this repo produces.
 images:
     docker images \
+        --filter=reference='ros2-base:*' \
         --filter=reference='ros2-desktop:*' \
         --filter=reference='px4-sitl:*' \
         --format 'table {{{{.Repository}}:{{{{.Tag}}\t{{{{.Size}}'
