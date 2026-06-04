@@ -132,16 +132,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Pull and retag base image
+      - name: Resolve base build-context
+        id: base
         run: |
           base_target=$(uv run python generate.py --tags \
             | awk -v t="${{ matrix.target }}" '$1==t {print $3}')
           base_local=$(uv run python generate.py --tags \
             | awk -v t="$base_target" '$1==t {print $2}')
-          docker pull ${{ env.REGISTRY }}/${{ env.OWNER }}/${base_local}
-          docker tag  ${{ env.REGISTRY }}/${{ env.OWNER }}/${base_local} ${base_local}
+          echo "build_context=${base_local}=docker-image://${{ env.REGISTRY }}/${{ env.OWNER }}/${base_local}" \
+            >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
 
       - name: Build (and push on main)
         uses: docker/build-push-action@v6
@@ -149,5 +150,6 @@ jobs:
           context: output/${{ matrix.target }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.tag.outputs.image }}
+          build-contexts: ${{ steps.base.outputs.build_context }}
           cache-from: type=gha,scope=${{ matrix.target }}
           cache-to: type=gha,mode=max,scope=${{ matrix.target }}
