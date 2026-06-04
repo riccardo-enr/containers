@@ -1,16 +1,16 @@
 # syntax=docker/dockerfile:1
 #
 # GENERATED FILE - do not edit by hand.
-# Profile : px4-sitl-jazzy-cpu
+# Profile : px4-sitl-humble-gpu
 # Source  : config.yml + layers/*.j2
-# Regenerate with: python generate.py px4-sitl-jazzy-cpu --write
+# Regenerate with: python generate.py px4-sitl-humble-gpu --write
 #
-# ROS 2 jazzy + PX4 SITL toolchain + MAVSDK (cpu).
+# ROS 2 humble + PX4 SITL toolchain + MAVSDK (gpu).
 
-FROM ros2-base:jazzy-cpu
+FROM ros2-base:humble-gpu
 
 ARG DEBIAN_FRONTEND=noninteractive
-ENV ROS_DISTRO=jazzy
+ENV ROS_DISTRO=humble
 ENV LANG=en_US.UTF-8
 
 # --- px4-deps: PX4 SITL toolchain and build dependencies ------------------
@@ -36,7 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Noble (24.04) ships pip with PEP 668 "externally managed" enforcement, so
 # system installs need --break-system-packages. Jammy's (22.04) older pip
 # neither has that flag nor needs it.
-RUN pip3 install --no-cache-dir --break-system-packages \
+RUN pip3 install --no-cache-dir \
         mavsdk \
         aioconsole \
         pymavlink
@@ -46,7 +46,9 @@ RUN pip3 install --no-cache-dir --break-system-packages \
 # sensor simulation, so it ships only in GPU images. ros-<distro>-ros-gz pulls
 # the Gazebo release paired with the ROS 2 distro (Harmonic on Jazzy, Fortress
 # on Humble) together with the ros_gz bridge packages.
-# (skipped: gz-sim is GPU-only; this is a cpu image)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ros-humble-ros-gz \
+    && rm -rf /var/lib/apt/lists/*
 
 # --- ros-user: create a non-root user with the workspace pre-sourced ------
 ARG USERNAME=ros
@@ -57,7 +59,7 @@ RUN groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
-    && echo "source /opt/ros/jazzy/setup.bash" >> /home/${USERNAME}/.bashrc
+    && echo "source /opt/ros/humble/setup.bash" >> /home/${USERNAME}/.bashrc
 
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}
@@ -69,6 +71,6 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     && sudo rm -rf /var/lib/apt/lists/* \
     && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
         "" --unattended \
-    && echo "source /opt/ros/jazzy/setup.zsh" >> /home/ros/.zshrc
+    && echo "source /opt/ros/humble/setup.zsh" >> /home/ros/.zshrc
 
 ENV SHELL=/usr/bin/zsh

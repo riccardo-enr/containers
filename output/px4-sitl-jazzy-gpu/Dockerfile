@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 #
 # GENERATED FILE - do not edit by hand.
-# Profile : px4-sitl-jazzy-cpu
+# Profile : px4-sitl-jazzy-gpu
 # Source  : config.yml + layers/*.j2
-# Regenerate with: python generate.py px4-sitl-jazzy-cpu --write
+# Regenerate with: python generate.py px4-sitl-jazzy-gpu --write
 #
-# ROS 2 jazzy + PX4 SITL toolchain + MAVSDK (cpu).
+# ROS 2 jazzy + PX4 SITL toolchain + MAVSDK (gpu).
 
-FROM ros2-base:jazzy-cpu
+FROM ros2-base:jazzy-gpu
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV ROS_DISTRO=jazzy
@@ -46,7 +46,9 @@ RUN pip3 install --no-cache-dir --break-system-packages \
 # sensor simulation, so it ships only in GPU images. ros-<distro>-ros-gz pulls
 # the Gazebo release paired with the ROS 2 distro (Harmonic on Jazzy, Fortress
 # on Humble) together with the ros_gz bridge packages.
-# (skipped: gz-sim is GPU-only; this is a cpu image)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ros-jazzy-ros-gz \
+    && rm -rf /var/lib/apt/lists/*
 
 # --- ros-user: create a non-root user with the workspace pre-sourced ------
 ARG USERNAME=ros
