@@ -4,7 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      "BASE_IMAGE": "ros2-desktop:jazzy-gpu"
+      "BASE_IMAGE": "ros2-desktop:jazzy-gpu-devel"
     }
   },
   "runArgs": ["--gpus", "all"],

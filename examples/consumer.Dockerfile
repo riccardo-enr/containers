@@ -1,33 +1,45 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
 #
-# Example Dockerfile for a CONSUMER repo.
+# Example Dockerfile for a CONSUMER repo (GPU + CUDA compile + Gazebo).
 #
-# It uses a LOCAL image built by this repo's ./build.sh as its base layer, then
-# adds only project-specific things on top. The expensive base (ROS 2, CUDA,
-# oh-my-zsh) is never rebuilt; only this thin layer rebuilds when your project
-# deps change.
+# Builds on the prebuilt factory image ros2-desktop:jazzy-gpu-devel (run this
+# repo's ./build.sh once). That base already provides: CUDA -devel base (nvcc +
+# headers) with NVIDIA caps for OGRE2/EGL rendering, ROS 2 Jazzy desktop,
+# colcon + rosdep (init & update), fzf, the `ros` user (uid 1000, NOPASSWD
+# sudo, sourced rc files), and vanilla oh-my-zsh + zsh.
 #
-# Copy into the other repo (e.g. .devcontainer/Dockerfile) and build via the
-# accompanying devcontainer.json.
+# So everything below is ONLY the project-specific layer on top -- it rebuilds
+# in seconds; the heavy base is never rebuilt.
 
-# Pick the base by overriding BASE_IMAGE at build time, e.g.
-#   docker build --build-arg BASE_IMAGE=ros2-desktop:jazzy-gpu .
-ARG BASE_IMAGE=ros2-desktop:humble-cpu
+# Override to retarget, e.g. --build-arg BASE_IMAGE=ros2-desktop:jazzy-gpu
+ARG BASE_IMAGE=ros2-desktop:jazzy-gpu-devel
 FROM ${BASE_IMAGE}
 
-# --- project-specific apt packages ---------------------------------------
-# Runs as the `ros` user from the base image, so use its NOPASSWD sudo.
+# The oh-my-zsh fzf plugin sources its shell integration from here.
+ENV FZF_BASE=/usr/share/doc/fzf/examples
+
+# --- project ROS packages (Gazebo Harmonic via ros-gz) + dev tooling ------
+# We run as the base image's `ros` user, so apt goes through its NOPASSWD sudo.
+# ROS_DISTRO is inherited from the base image's ENV.
 RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-        ros-${ROS_DISTRO}-nav2-bringup \
-        ros-${ROS_DISTRO}-tf-transformations \
+        ros-${ROS_DISTRO}-ros-gz \
+        ros-${ROS_DISTRO}-pcl-ros \
+        ros-${ROS_DISTRO}-topic-tools \
+        python3-pip \
+        just \
+        clang-format \
+    && sudo pip install --break-system-packages ruff \
     && sudo rm -rf /var/lib/apt/lists/*
 
-# --- project Python deps --------------------------------------------------
-COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+# --- fzf zsh shell-integration scripts (missing from the Ubuntu package) ---
+RUN FZF_VER="$(fzf --version | awk '{print $1}')" \
+    && sudo curl -fsSL "https://raw.githubusercontent.com/junegunn/fzf/$FZF_VER/shell/key-bindings.zsh" \
+        -o "$FZF_BASE/key-bindings.zsh" \
+    && sudo curl -fsSL "https://raw.githubusercontent.com/junegunn/fzf/$FZF_VER/shell/completion.zsh" \
+        -o "$FZF_BASE/completion.zsh"
 
-# --- (optional) pre-build the colcon workspace ----------------------------
-# Leave this out if you'd rather build inside the running devcontainer.
-# WORKDIR /workspace
-# COPY . /workspace
-# RUN . /opt/ros/${ROS_DISTRO}/setup.sh && colcon build --symlink-install
+# --- oh-my-zsh plugins + powerlevel10k theme (base has vanilla oh-my-zsh) --
+RUN ZSH_CUSTOM="$HOME/.oh-my-zsh/custom" \
+    && git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions" \
+    && git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" \
+    && git clone --depth=1 https://github.com/romkatv/powerlevel10k "$ZSH_CUSTOM/themes/powerlevel10k"

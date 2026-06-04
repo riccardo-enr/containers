@@ -62,6 +62,16 @@ def target_name(stack, distro, hardware):
     return f"{stack}-{distro}-{hardware}"
 
 
+def image_tag(stack, distro, hardware):
+    """
+    Local Docker image tag for a target: "<stack>:<distro>-<hardware>".
+
+    Emitted authoritatively here (not parsed from the dir name) because both
+    stack and hardware may contain dashes (e.g. ros2-desktop, gpu-devel).
+    """
+    return f"{stack}:{distro}-{hardware}"
+
+
 def render_string(env, template_str, context):
     """Render an inline Jinja string (used for base image + description)."""
     return env.from_string(template_str).render(**context)
@@ -163,7 +173,13 @@ def find_target_by_name(config, name):
 @click.option("--write", is_flag=True, help="Write to output/<target>/Dockerfile.")
 @click.option("--dry-run", is_flag=True, help="Print rendered Dockerfile to stdout.")
 @click.option("--list", "list_flag", is_flag=True, help="List configured targets.")
-def main(target, stack, distro, hardware, all_flag, write, dry_run, list_flag):
+@click.option(
+    "--tags",
+    "tags_flag",
+    is_flag=True,
+    help="Print '<output-name> <image-tag>' per target (for build.sh).",
+)
+def main(target, stack, distro, hardware, all_flag, write, dry_run, list_flag, tags_flag):
     """Compose Dockerfiles from (stack, distro, hardware) axes."""
     config = load_config()
     env = make_env()
@@ -171,6 +187,11 @@ def main(target, stack, distro, hardware, all_flag, write, dry_run, list_flag):
     if list_flag:
         for s, d, h in all_targets(config):
             click.echo(target_name(s, d, h))
+        return
+
+    if tags_flag:
+        for s, d, h in all_targets(config):
+            click.echo(f"{target_name(s, d, h)} {image_tag(s, d, h)}")
         return
 
     # Resolve which triples to render.

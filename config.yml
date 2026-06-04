@@ -39,6 +39,12 @@ hardware:
     base: "nvidia/cuda:{{ cuda_version }}-runtime-ubuntu{{ ubuntu_version }}"
     layers:
       - nvidia-env
+  # Like gpu, but on the CUDA -devel base: ships nvcc + headers for compiling
+  # CUDA code (kernels, custom ops). Larger image; use only when you build CUDA.
+  gpu-devel:
+    base: "nvidia/cuda:{{ cuda_version }}-devel-ubuntu{{ ubuntu_version }}"
+    layers:
+      - nvidia-env
 
 # --- Axis 3: stack -> ordered layer recipe --------------------------------
 stacks:
@@ -74,6 +80,7 @@ defaults:
 targets:
   - { stack: ros2-desktop, distro: jazzy,  hardware: cpu }
   - { stack: ros2-desktop, distro: jazzy,  hardware: gpu }
+  - { stack: ros2-desktop, distro: jazzy,  hardware: gpu-devel }
   - { stack: ros2-desktop, distro: humble, hardware: cpu }
   - { stack: ros2-desktop, distro: humble, hardware: gpu }
   - { stack: px4-sitl,     distro: jazzy,  hardware: cpu }
