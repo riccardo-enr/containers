@@ -1,6 +1,6 @@
 # --- px4-source: clone PX4 firmware + the uXRCE-DDS agent -----------------
-# Clones PX4-Autopilot and runs its setup script (deps only; px4_sitl itself
-# compiles on first `make px4_sitl <model>`). Then builds the Micro-XRCE-DDS
+# Clones PX4-Autopilot v1.17.0 and runs its setup script (deps only; px4_sitl
+# itself compiles on first `make px4_sitl <model>`). Then builds the Micro-XRCE-DDS
 # Agent -- the bridge PX4 uses to talk to ROS 2 over uXRCE-DDS. The agent is
 # packaged here rather than in its own layer because it is useless without the
 # PX4 firmware it bridges. Pinned to v3.0.1 for a reproducible build; its cmake
@@ -14,7 +14,7 @@
 # once. We must build the default target first, then run install -- this mirrors
 # the upstream `cmake .. && make && make install` recipe. Running install before
 # the default build fails with "No rule to make target 'install'".
-RUN git clone --depth 1 --recurse-submodules --shallow-submodules \
+RUN git clone --depth 1 --branch v1.17.0 --recurse-submodules --shallow-submodules \
         https://github.com/PX4/PX4-Autopilot.git /opt/px4 \
     && cd /opt/px4 \
     && bash Tools/setup/ubuntu.sh --no-nuttx \
