@@ -7,6 +7,13 @@
 # superbuild fetches and builds Fast-DDS, so build-essential + cmake (px4-deps)
 # are the only host prerequisites.
 #
+# This layer runs AFTER ros-user, i.e. as the unprivileged `{{ username }}` user,
+# so the firmware lands in the user's home ($HOME/px4/PX4-Autopilot) and is owned
+# by them. That matters because `make px4_sitl <model>` compiles in-tree on first
+# run and must be able to create build/ -- a root-owned /opt clone would fail with
+# "Permission denied". Privileged steps (the setup script's apt installs, the
+# agent's install into /usr/local) go through the user's NOPASSWD sudo.
+#
 # The agent uses a CMake superbuild: the top-level project is `uagent_superbuild`
 # (an ExternalProject orchestrator that fetches/builds Fast-CDR + Fast-DDS, then
 # reconfigures this same build tree in place as the real, non-superbuild project).
@@ -15,16 +22,16 @@
 # the upstream `cmake .. && make && make install` recipe. Running install before
 # the default build fails with "No rule to make target 'install'".
 RUN git clone --depth 1 --branch v1.17.0 --recurse-submodules --shallow-submodules \
-        https://github.com/PX4/PX4-Autopilot.git /opt/px4 \
-    && cd /opt/px4 \
+        https://github.com/PX4/PX4-Autopilot.git /home/{{ username }}/px4/PX4-Autopilot \
+    && cd /home/{{ username }}/px4/PX4-Autopilot \
     && bash Tools/setup/ubuntu.sh --no-nuttx \
-    && rm -rf /var/lib/apt/lists/*
+    && sudo rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 --branch v3.0.1 \
         https://github.com/eProsima/Micro-XRCE-DDS-Agent.git /tmp/xrce-agent \
     && cmake -S /tmp/xrce-agent -B /tmp/xrce-agent/build \
         -DUAGENT_BUILD_EXECUTABLE=ON \
     && cmake --build /tmp/xrce-agent/build -j "$(nproc)" \
-    && cmake --build /tmp/xrce-agent/build --target install \
-    && ldconfig /usr/local/lib/ \
+    && sudo cmake --build /tmp/xrce-agent/build --target install \
+    && sudo ldconfig /usr/local/lib/ \
     && rm -rf /tmp/xrce-agent
