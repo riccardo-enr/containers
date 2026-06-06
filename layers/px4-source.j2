@@ -21,8 +21,8 @@
 # once. We must build the default target first, then run install -- this mirrors
 # the upstream `cmake .. && make && make install` recipe. Running install before
 # the default build fails with "No rule to make target 'install'".
-RUN git clone --depth 1 --branch v1.17.0 --recurse-submodules --shallow-submodules \
-        https://github.com/PX4/PX4-Autopilot.git /home/{{ username }}/px4/PX4-Autopilot \
+RUN git clone --depth 1 --branch stable --recurse-submodules --shallow-submodules \
+        https://github.com/riccardo-enr/PX4-Autopilot.git /home/{{ username }}/px4/PX4-Autopilot \
     && cd /home/{{ username }}/px4/PX4-Autopilot \
     && bash Tools/setup/ubuntu.sh --no-nuttx \
     && sudo rm -rf /var/lib/apt/lists/*
