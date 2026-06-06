@@ -62,6 +62,10 @@ images:
         --filter=reference='px4-sitl:*' \
         --format 'table {{{{.Repository}}:{{{{.Tag}}\t{{{{.Size}}'
 
+# Lint all Markdown files (requires markdownlint-cli2).
+lint-md:
+    markdownlint-cli2
+
 # Remove generated Dockerfiles.
 clean:
     rm -rf output
