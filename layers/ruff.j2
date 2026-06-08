@@ -1,0 +1,9 @@
+# --- ruff: Python linter and formatter ------------------------------------
+# Noble (24.04) enforces PEP 668 on system pip; Jammy does not need the flag.
+{% if ubuntu_version == "24.04" %}
+RUN pip3 install --no-cache-dir --break-system-packages \
+        ruff
+{% else %}
+RUN pip3 install --no-cache-dir \
+        ruff
+{% endif %}

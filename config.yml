@@ -68,6 +68,8 @@ stacks:
     description: "ROS 2 {{ ros_distro }} desktop ({{ hardware }}), fzf + oh-my-zsh."
     base_stack: ros2-base
     layers:
+      - clangd
+      - ruff
       - fzf-shell
       - ros-user
       - omz-shell
