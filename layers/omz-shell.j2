@@ -4,7 +4,9 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
         zsh \
     && sudo rm -rf /var/lib/apt/lists/* \
     && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
-        "" --unattended \
-    && echo "source /opt/ros/{{ ros_distro }}/setup.zsh" >> /home/{{ username }}/.zshrc
+        "" --unattended
+{% if ros_distro is defined %}
+RUN echo "source /opt/ros/{{ ros_distro }}/setup.zsh" >> /home/{{ username }}/.zshrc
+{% endif %}
 
 ENV SHELL=/usr/bin/zsh

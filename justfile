@@ -56,6 +56,7 @@ images:
         --filter=reference='ros2-base:*' \
         --filter=reference='ros2-desktop:*' \
         --filter=reference='px4-sitl:*' \
+        --filter=reference='devbox:*' \
         --format 'table {{{{.Repository}}:{{{{.Tag}}\t{{{{.Size}}'
 
 # Lint all Markdown files (requires markdownlint-cli2).

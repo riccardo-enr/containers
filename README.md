@@ -36,9 +36,15 @@ A Dockerfile is the product of three independent choices:
 
 | Axis         | Values                                  | Controls                               |
 |--------------|-----------------------------------------|----------------------------------------|
-| **distro**   | `jazzy`, `humble`                       | `ros_distro` + its Ubuntu/CUDA pairing |
-| **hardware** | `cpu`, `gpu`                            | base-image family + GPU-only layers    |
-| **stack**    | `ros2-base`, `ros2-desktop`, `px4-sitl` | the ordered layer recipe               |
+| **distro**   | `jazzy`, `humble`, `noble`                       | ROS distro (or bare Ubuntu) + its Ubuntu/CUDA pairing |
+| **hardware** | `cpu`, `gpu`                                     | base-image family + GPU-only layers    |
+| **stack**    | `ros2-base`, `ros2-desktop`, `px4-sitl`, `devbox` | the ordered layer recipe               |
+
+`noble` is a **non-ROS** distro entry (Ubuntu 24.04, no `ros_distro`); the
+header and the shared user/shell layers guard their ROS-specific lines behind a
+`ros_distro is defined` Jinja check, so they compose cleanly onto a bare base.
+The `devbox` stack uses it for a plain terminal-tooling image (tmux + nvim +
+zsh) with no ROS.
 
 A **target** is one `(stack, distro, hardware)` triple. The base image is a
 function of *both* distro and hardware:
@@ -65,6 +71,13 @@ an unwanted full product. Default coverage: `ros2-base` + `ros2-desktop` on the
 distro x hardware cells, and `px4-sitl` on CPU and GPU. The `px4-sitl` GPU
 images add the `gz-sim` layer (Gazebo, paired with the ROS distro) for
 GPU-accelerated SITL; the CPU images skip it since nothing there uses the GPU.
+`devbox` ships on `noble` (CPU + GPU) as a standalone, non-ROS dev box.
+
+**Personal config (tmux/nvim).** The `tmux` and `nvim` layers install only the
+binaries (pinned, prebuilt -- not apt, which lags upstream); mount your own
+`~/.config/tmux` and `~/.config/nvim` at runtime via the devcontainer or
+`docker run -v`. They are base-agnostic, so they appear in both the ROS
+interactive stacks and `devbox`.
 
 ## How it works
 
