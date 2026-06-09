@@ -4,7 +4,7 @@
 python := "uv run python"
 
 # Container registry to push images to. Override on the CLI, e.g.
-# `just registry=ghcr.io/other push`.
+# `just registry=ghcr.io/other ghcr-push`.
 registry := "ghcr.io/riccardo-enr"
 
 # Show available recipes.
