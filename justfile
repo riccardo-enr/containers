@@ -3,6 +3,10 @@
 
 python := "uv run python"
 
+# Container registry to push images to. Override on the CLI, e.g.
+# `just registry=ghcr.io/other push`.
+registry := "ghcr.io/riccardo-enr"
+
 # Show available recipes.
 default:
     @just --list
@@ -42,6 +46,37 @@ build-cpu:
 # Build only gpu targets.
 build-gpu:
     ./build.sh --hardware gpu
+
+# Log in to ghcr.io using $GITHUB_TOKEN (a PAT with write:packages scope).
+ghcr-login user=`git config user.name`:
+    echo "${GITHUB_TOKEN:?set GITHUB_TOKEN to a PAT with write:packages}" \
+        | docker login ghcr.io -u {{user}} --password-stdin
+
+# Retag local images for `registry` and push them. With no arg, pushes every
+# target; pass a target to push one, e.g. `just ghcr-push ros2-desktop-jazzy-gpu`.
+ghcr-push target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pushed=0
+    while read -r name tag base; do
+        [ -n "$tag" ] || continue
+        if [ -n "{{target}}" ] && [ "{{target}}" != "$name" ]; then continue; fi
+        remote="{{registry}}/$tag"
+        echo ">> $tag -> $remote"
+        docker tag "$tag" "$remote"
+        docker push "$remote"
+        pushed=$((pushed + 1))
+    done < <({{python}} generate.py --tags)
+    if [ -n "{{target}}" ] && [ "$pushed" -eq 0 ]; then
+        echo "no such target: {{target}}  (see: just list)" >&2
+        exit 1
+    fi
+
+# Build then push to `registry`. With no arg, releases every target; pass a
+# target to release one, e.g. `just release ros2-desktop-jazzy-gpu`.
+release target="":
+    ./build.sh {{target}}
+    just registry={{registry}} ghcr-push {{target}}
 
 # Fail if output/ is stale vs config.yml + layers/ (use in CI / pre-commit).
 check:
