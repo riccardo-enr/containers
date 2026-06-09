@@ -8,7 +8,9 @@
 #
 # The base image is a function of BOTH distro and hardware:
 #   cpu -> ubuntu:<ubuntu_version>
-#   gpu -> nvidia/cuda:<cuda_version>-runtime-ubuntu<ubuntu_version>
+#   gpu -> nvidia/cuda:<cuda_version>-devel-ubuntu<ubuntu_version>
+# The gpu base is the CUDA *devel* image (ships nvcc + the full toolkit) so
+# CUDA solvers (e.g. MPPI-Generic) build in-container, not just run.
 # CUDA versions are NOT symmetric across Ubuntu releases: Noble (24.04) needs
 # CUDA >= 12.5, so cuda_version lives on the distro axis. 12.6.3 covers both.
 #
@@ -43,7 +45,7 @@ hardware:
     base: "ubuntu:{{ ubuntu_version }}"
     layers: []
   gpu:
-    base: "nvidia/cuda:{{ cuda_version }}-runtime-ubuntu{{ ubuntu_version }}"
+    base: "nvidia/cuda:{{ cuda_version }}-devel-ubuntu{{ ubuntu_version }}"
     layers:
       - nvidia-env
 
