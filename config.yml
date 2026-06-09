@@ -79,6 +79,7 @@ stacks:
       - nvim
       - user
       - omz-shell
+      - code-agents
   px4-sitl:
     description: "ROS 2 {{ ros_distro }} + PX4 SITL toolchain + MAVSDK ({{ hardware }})."
     base_stack: ros2-base
@@ -91,6 +92,7 @@ stacks:
       - user
       - px4-source
       - omz-shell
+      - code-agents
   # Non-ROS dev box: plain Ubuntu/CUDA base with terminal tooling. No base_stack,
   # so it builds FROM the raw hardware base. Uses the same tmux/nvim/user/omz
   # layers as the ROS stacks; their ROS-specific lines are guarded out because
