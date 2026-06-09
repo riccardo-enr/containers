@@ -31,7 +31,7 @@ gen-one target:
 build:
     ./build.sh
 
-# Build + tag a single target, e.g. `just build-one ros2-desktop-jazzy-gpu-devel`.
+# Build + tag a single target, e.g. `just build-one ros2-desktop-jazzy-gpu`.
 build-one target:
     ./build.sh {{target}}
 
@@ -39,13 +39,9 @@ build-one target:
 build-cpu:
     ./build.sh --hardware cpu
 
-# Build only gpu targets (excludes gpu-devel).
+# Build only gpu targets.
 build-gpu:
     ./build.sh --hardware gpu
-
-# Build only gpu-devel targets.
-build-gpu-devel:
-    ./build.sh --hardware gpu-devel
 
 # Fail if output/ is stale vs config.yml + layers/ (use in CI / pre-commit).
 check:

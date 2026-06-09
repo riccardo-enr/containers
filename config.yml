@@ -39,12 +39,6 @@ hardware:
     base: "nvidia/cuda:{{ cuda_version }}-runtime-ubuntu{{ ubuntu_version }}"
     layers:
       - nvidia-env
-  # Like gpu, but on the CUDA -devel base: ships nvcc + headers for compiling
-  # CUDA code (kernels, custom ops). Larger image; use only when you build CUDA.
-  gpu-devel:
-    base: "nvidia/cuda:{{ cuda_version }}-devel-ubuntu{{ ubuntu_version }}"
-    layers:
-      - nvidia-env
 
 # --- Axis 3: stack -> ordered layer recipe --------------------------------
 # A stack may set `base_stack: <other-stack>` to build FROM that stack's image
@@ -61,6 +55,7 @@ stacks:
     description: "ROS 2 {{ ros_distro }} core ({{ hardware }}): desktop + build tools."
     layers:
       - bootstrap
+      - nodejs
       - ros2-repo
       - ros2-desktop
       - rosdep-init
@@ -97,18 +92,15 @@ targets:
   # Shared base images -- built first, children FROM these.
   - { stack: ros2-base,    distro: jazzy,  hardware: cpu }
   - { stack: ros2-base,    distro: jazzy,  hardware: gpu }
-  - { stack: ros2-base,    distro: jazzy,  hardware: gpu-devel }
   - { stack: ros2-base,    distro: humble, hardware: cpu }
   - { stack: ros2-base,    distro: humble, hardware: gpu }
   # ROS 2 desktop on every distro x hardware cell.
   - { stack: ros2-desktop, distro: jazzy,  hardware: cpu }
   - { stack: ros2-desktop, distro: jazzy,  hardware: gpu }
-  - { stack: ros2-desktop, distro: jazzy,  hardware: gpu-devel }
   - { stack: ros2-desktop, distro: humble, hardware: cpu }
   - { stack: ros2-desktop, distro: humble, hardware: gpu }
   # PX4 SITL: CPU (llvmpipe software sim) + GPU (hardware-accelerated Gazebo).
   - { stack: px4-sitl,     distro: jazzy,  hardware: cpu }
   - { stack: px4-sitl,     distro: jazzy,  hardware: gpu }
-  - { stack: px4-sitl,     distro: jazzy,  hardware: gpu-devel }
   - { stack: px4-sitl,     distro: humble, hardware: cpu }
   - { stack: px4-sitl,     distro: humble, hardware: gpu }
