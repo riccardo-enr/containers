@@ -109,5 +109,6 @@ targets:
   # PX4 SITL: CPU (llvmpipe software sim) + GPU (hardware-accelerated Gazebo).
   - { stack: px4-sitl,     distro: jazzy,  hardware: cpu }
   - { stack: px4-sitl,     distro: jazzy,  hardware: gpu }
+  - { stack: px4-sitl,     distro: jazzy,  hardware: gpu-devel }
   - { stack: px4-sitl,     distro: humble, hardware: cpu }
   - { stack: px4-sitl,     distro: humble, hardware: gpu }
