@@ -96,14 +96,16 @@ stacks:
   # layers as the ROS stacks; their ROS-specific lines are guarded out because
   # the noble distro defines no ros_distro.
   devbox:
-    description: "Ubuntu {{ ubuntu_version }} dev box ({{ hardware }}): tmux + nvim + zsh."
+    description: "Ubuntu {{ ubuntu_version }} dev box ({{ hardware }}): tmux + nvim + zsh + AI agents."
     layers:
       - bootstrap
+      - nodejs
       - fzf-shell
       - tmux
       - nvim
       - user
       - omz-shell
+      - code-agents
 
 # Template args shared by every target.
 defaults:

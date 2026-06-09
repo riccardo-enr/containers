@@ -1,0 +1,12 @@
+# --- code-agents: terminal AI coding agents for {{ username }} ------------
+# Claude Code, Codex, and opencode are npm CLIs. Runs after the USER switch so
+# any per-user state lands in the user's home; the global install itself goes
+# through NOPASSWD sudo into Node's root-owned global prefix (on PATH). Needs
+# the nodejs layer earlier in the stack.
+RUN sudo npm install -g \
+        @anthropic-ai/claude-code \
+        @openai/codex \
+        opencode-ai \
+    && claude --version \
+    && codex --version \
+    && opencode --version

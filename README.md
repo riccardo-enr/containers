@@ -71,7 +71,8 @@ an unwanted full product. Default coverage: `ros2-base` + `ros2-desktop` on the
 distro x hardware cells, and `px4-sitl` on CPU and GPU. The `px4-sitl` GPU
 images add the `gz-sim` layer (Gazebo, paired with the ROS distro) for
 GPU-accelerated SITL; the CPU images skip it since nothing there uses the GPU.
-`devbox` ships on `noble` (CPU + GPU) as a standalone, non-ROS dev box.
+`devbox` ships on `noble` (CPU + GPU) as a standalone, non-ROS dev box, with
+the `code-agents` layer (Claude Code, Codex, opencode) installed on top.
 
 **Personal config (tmux/nvim).** The `tmux` and `nvim` layers install only the
 binaries (pinned, prebuilt -- not apt, which lags upstream); mount your own
