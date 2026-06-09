@@ -10,5 +10,7 @@
 FROM {{ base }}
 
 ARG DEBIAN_FRONTEND=noninteractive
+{% if ros_distro is defined %}
 ENV ROS_DISTRO={{ ros_distro }}
+{% endif %}
 ENV LANG=en_US.UTF-8

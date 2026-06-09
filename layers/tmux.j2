@@ -1,0 +1,9 @@
+# --- tmux: static prebuilt binary (config mounted at runtime) -------------
+# apt lags upstream (jammy 3.2a / noble 3.4 vs 3.6b). A statically-linked
+# binary needs no libevent/ncurses and no toolchain, so it works on any base
+# (ROS or the bare devbox). curl comes from the bootstrap layer.
+ARG TMUX_VERSION=3.6b
+RUN curl -fsSL https://github.com/mjakob-gh/build-static-tmux/releases/download/v${TMUX_VERSION}/tmux.linux-amd64.stripped.gz \
+        | gunzip -c > /usr/local/bin/tmux \
+    && chmod +x /usr/local/bin/tmux \
+    && tmux -V

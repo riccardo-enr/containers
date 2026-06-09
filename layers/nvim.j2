@@ -1,0 +1,8 @@
+# --- nvim: official Neovim release (config mounted at runtime) ------------
+# apt nvim is ancient (jammy 0.6 / noble 0.9). Use the upstream prebuilt
+# tarball into /opt and symlink onto PATH. curl comes from the bootstrap layer.
+ARG NVIM_VERSION=0.12.2
+RUN curl -fsSL https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux-x86_64.tar.gz \
+        | tar -xz -C /opt \
+    && ln -s /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim \
+    && nvim --version | head -1

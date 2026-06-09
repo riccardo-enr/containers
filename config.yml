@@ -27,6 +27,13 @@ distros:
     ubuntu_codename: jammy
     ubuntu_version: "22.04"
     cuda_version: "12.6.3"
+  # Non-ROS Ubuntu generation (no ros_distro) -- used by the devbox stack.
+  # ROS layers/header guard their ROS lines behind `ros_distro is defined`,
+  # so this entry produces a clean non-ROS image.
+  noble:
+    ubuntu_codename: noble
+    ubuntu_version: "24.04"
+    cuda_version: "12.6.3"
 
 # --- Axis 2: hardware -> base image template + extra layers ----------------
 # `base` is itself a Jinja string rendered with the merged context.
@@ -66,7 +73,9 @@ stacks:
       - clangd
       - ruff
       - fzf-shell
-      - ros-user
+      - tmux
+      - nvim
+      - user
       - omz-shell
   px4-sitl:
     description: "ROS 2 {{ ros_distro }} + PX4 SITL toolchain + MAVSDK ({{ hardware }})."
@@ -75,8 +84,23 @@ stacks:
       - px4-deps
       - mavsdk-python
       - gz-sim
-      - ros-user
+      - tmux
+      - nvim
+      - user
       - px4-source
+      - omz-shell
+  # Non-ROS dev box: plain Ubuntu/CUDA base with terminal tooling. No base_stack,
+  # so it builds FROM the raw hardware base. Uses the same tmux/nvim/user/omz
+  # layers as the ROS stacks; their ROS-specific lines are guarded out because
+  # the noble distro defines no ros_distro.
+  devbox:
+    description: "Ubuntu {{ ubuntu_version }} dev box ({{ hardware }}): tmux + nvim + zsh."
+    layers:
+      - bootstrap
+      - fzf-shell
+      - tmux
+      - nvim
+      - user
       - omz-shell
 
 # Template args shared by every target.
@@ -104,3 +128,6 @@ targets:
   - { stack: px4-sitl,     distro: jazzy,  hardware: gpu }
   - { stack: px4-sitl,     distro: humble, hardware: cpu }
   - { stack: px4-sitl,     distro: humble, hardware: gpu }
+  # Non-ROS dev box on Ubuntu 24.04 (noble): CPU + GPU.
+  - { stack: devbox,       distro: noble,  hardware: cpu }
+  - { stack: devbox,       distro: noble,  hardware: gpu }
