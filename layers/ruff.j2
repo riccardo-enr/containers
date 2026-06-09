@@ -1,9 +1,11 @@
 # --- ruff: Python linter and formatter ------------------------------------
-# Noble (24.04) enforces PEP 668 on system pip; Jammy does not need the flag.
+# ros2-base does not ship pip, so install it here. Noble (24.04) enforces
+# PEP 668 on system pip; Jammy does not need the --break-system-packages flag.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3-pip \
+    && rm -rf /var/lib/apt/lists/* \
 {% if ubuntu_version == "24.04" %}
-RUN pip3 install --no-cache-dir --break-system-packages \
-        ruff
+    && pip3 install --no-cache-dir --break-system-packages ruff
 {% else %}
-RUN pip3 install --no-cache-dir \
-        ruff
+    && pip3 install --no-cache-dir ruff
 {% endif %}
