@@ -12,7 +12,7 @@
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
   "mounts": [
     "source=${localEnv:HOME}/.config/nvim,target=/home/ros/.config/nvim,type=bind,consistency=cached",
-    "source=copilot-auth,target=/home/ros/.config/github-copilot,type=volume"
+    "source=${localEnv:HOME}/.config/github-copilot,target=/home/ros/.config/github-copilot,type=bind,consistency=cached"
   ],
   "postCreateCommand": "sudo apt-get update && sudo apt-get install -y --no-install-recommends ripgrep fd-find && sudo ln -sf $(command -v fdfind) /usr/local/bin/fd && curl -fsSL https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz -o /tmp/nvim.tar.gz && sudo rm -rf /opt/nvim-linux-x86_64 && sudo tar -C /opt -xzf /tmp/nvim.tar.gz && sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim && rm -f /tmp/nvim.tar.gz",
   "customizations": {
