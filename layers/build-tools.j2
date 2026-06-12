@@ -1,8 +1,7 @@
 # --- build-tools: fast C++ build toolchain for ROS 2 workspaces ------------
-/* Installs ccache (compiler cache), mold (fast linker), Ninja (parallel
-   build system), Clang + LLD, bear (compile_commands.json generator), and
-   the colcon-mixin extension. Sets COLCON_HOME so defaults.yaml is picked
-   up by every user (root and {{ username }}). */
+# ccache (compiler cache), mold (fast linker), Ninja, Clang/LLD, bear
+# (compile_commands.json), colcon-mixin. COLCON_HOME=/etc/colcon makes
+# defaults.yaml apply to every user (root and {{ username }}).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         bear \
         ccache \
