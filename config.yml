@@ -67,6 +67,7 @@ stacks:
       - nodejs
       - ros2-repo
       - ros2-desktop
+      - build-tools
       - rosdep-init
       - agent-clis
   ros2-desktop:

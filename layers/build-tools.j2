@@ -1,0 +1,33 @@
+# --- build-tools: fast C++ build toolchain for ROS 2 workspaces ------------
+/* Installs ccache (compiler cache), mold (fast linker), Ninja (parallel
+   build system), Clang + LLD, bear (compile_commands.json generator), and
+   the colcon-mixin extension. Sets COLCON_HOME so defaults.yaml is picked
+   up by every user (root and {{ username }}). */
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        bear \
+        ccache \
+        clang \
+        clang-tools \
+        lld \
+        mold \
+        ninja-build \
+        python3-colcon-mixin \
+    && rm -rf /var/lib/apt/lists/* \
+    && colcon mixin add default \
+        https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml \
+    && colcon mixin update default
+
+ENV COLCON_HOME=/etc/colcon
+
+RUN mkdir -p /etc/colcon && printf '%s\n' \
+    'build:' \
+    '  cmake-args:' \
+    '    - -G Ninja' \
+    '    - -DCMAKE_BUILD_TYPE=RelWithDebInfo' \
+    '    - -DCMAKE_C_COMPILER_LAUNCHER=ccache' \
+    '    - -DCMAKE_CXX_COMPILER_LAUNCHER=ccache' \
+    '    - "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=mold"' \
+    '    - "-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=mold"' \
+    '    - -DBUILD_TESTING=OFF' \
+    '  symlink-install: true' \
+    > /etc/colcon/defaults.yaml
