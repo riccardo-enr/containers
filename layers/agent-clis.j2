@@ -1,0 +1,13 @@
+# --- agent-clis: Node.js + AI coding-agent CLIs ---------------------------
+# Installs Node.js (NodeSource LTS) then the agent CLIs globally, so every
+# user in the image (root and the non-root {{ username }}) can run them.
+# Lives in ros2-base's root section; ros2-desktop and px4-sitl inherit it via
+# base_stack chaining -- a single global install covers all three stacks.
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g \
+        @anthropic-ai/claude-code \
+        @openai/codex \
+        opencode-ai \
+    && npm cache clean --force

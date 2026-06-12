@@ -68,6 +68,7 @@ stacks:
       - ros2-repo
       - ros2-desktop
       - rosdep-init
+      - agent-clis
   ros2-desktop:
     description: "ROS 2 {{ ros_distro }} desktop ({{ hardware }}), fzf + oh-my-zsh."
     base_stack: ros2-base
