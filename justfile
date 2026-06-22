@@ -91,6 +91,17 @@ release target="":
     ./build.sh {{target}}
     just registry={{registry}} ghcr-push {{target}}
 
+# Build + push every flavour of one stack, e.g. `just release-stack ros2-desktop`
+# releases ros2-desktop-{jazzy,humble}-{cpu,gpu} (and each one's base chain).
+release-stack stack:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    targets=$({{python}} generate.py --tags | awk '$1 ~ /^{{stack}}-/ {print $1}')
+    [ -n "$targets" ] || { echo "no targets for stack: {{stack}}  (see: just list)" >&2; exit 1; }
+    for t in $targets; do
+        just registry={{registry}} release "$t"
+    done
+
 # Fail if output/ is stale vs config.yml + layers/ (use in CI / pre-commit).
 check:
     {{python}} generate.py --all --write

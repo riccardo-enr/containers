@@ -76,6 +76,7 @@ stacks:
     layers:
       - clangd
       - ruff
+      - plotjuggler
       - fzf-shell
       - tmux
       - nvim
@@ -89,6 +90,7 @@ stacks:
     layers:
       - px4-deps
       - mavsdk-python
+      - plotjuggler
       - gz-sim
       - tmux
       - nvim

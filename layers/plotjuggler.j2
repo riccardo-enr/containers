@@ -1,0 +1,4 @@
+# --- plotjuggler: ROS 2 time-series visualization GUI ---------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ros-{{ ros_distro }}-plotjuggler-ros \
+    && rm -rf /var/lib/apt/lists/*
