@@ -1,10 +1,11 @@
 # --- lazygit: terminal UI for git (config mounted at runtime) -------------
-# apt has no lazygit package on jammy/noble. Resolve the latest release tag
-# from the GitHub API at build time and install the upstream prebuilt static
-# binary into /usr/local/bin -- no toolchain needed. curl and git come from
-# the bootstrap layer.
-RUN LAZYGIT_VERSION=$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest \
-        | grep -Po '"tag_name":\s*"v\K[^"]+') \
-    && curl -fsSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_x86_64.tar.gz" \
+# apt has no lazygit package on jammy/noble. Pin the release (like the tmux/nvim
+# layers) and install the upstream prebuilt static binary into /usr/local/bin --
+# no toolchain needed. Do NOT resolve the version from the GitHub API at build
+# time: unauthenticated api.github.com requests are rate-limited (HTTP 403),
+# which leaves the version empty and breaks the build. Bump LAZYGIT_VERSION to
+# update. curl and git come from the bootstrap layer.
+ARG LAZYGIT_VERSION=0.62.2
+RUN curl -fsSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_x86_64.tar.gz" \
         | tar -xz -C /usr/local/bin lazygit \
     && lazygit --version
