@@ -2,3 +2,10 @@
 # Picked up by the NVIDIA Container Toolkit (`docker run --gpus all`).
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=all
+
+# The CUDA toolkit is already baked into the -devel base image, so the CUDA apt
+# repo is never used at build time -- it only adds a flaky dependency: every
+# later `apt-get update` contacts developer.download.nvidia.com, which aborts
+# the whole update when that mirror is mid-sync ("File has unexpected size").
+# Drop the source so apt-get update no longer reaches out to it.
+RUN rm -f /etc/apt/sources.list.d/cuda*.list
