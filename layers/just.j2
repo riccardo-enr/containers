@@ -1,10 +1,12 @@
 # --- just: command runner / task runner -----------------------------------
-# apt's `just` is stale/absent on jammy/noble. Resolve the latest release tag
-# from the GitHub API at build time and install the upstream prebuilt static
-# binary into /usr/local/bin -- no toolchain needed. curl comes from the
-# bootstrap layer.
-RUN JUST_VERSION=$(curl -fsSL https://api.github.com/repos/casey/just/releases/latest \
-        | grep -Po '"tag_name":\s*"\K[^"]+') \
-    && curl -fsSL "https://github.com/casey/just/releases/download/${JUST_VERSION}/just-${JUST_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+# apt's `just` is stale/absent on jammy/noble. Pin the release (like the
+# tmux/nvim layers) and install the upstream prebuilt static binary into
+# /usr/local/bin -- no toolchain needed. Do NOT resolve the version from the
+# GitHub API at build time: unauthenticated api.github.com requests are
+# rate-limited (HTTP 403), which leaves the version empty and breaks the build.
+# Bump JUST_VERSION to update. curl comes from the bootstrap layer.
+# (casey/just release tags have no leading 'v'.)
+ARG JUST_VERSION=1.54.0
+RUN curl -fsSL "https://github.com/casey/just/releases/download/${JUST_VERSION}/just-${JUST_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
         | tar -xz -C /usr/local/bin just \
     && just --version
