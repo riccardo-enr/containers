@@ -91,6 +91,9 @@ stacks:
     layers:
       - px4-deps
       - mavsdk-python
+      - clangd
+      - ruff
+      - pyright
       - plotjuggler
       - gz-sim
       - tmux
