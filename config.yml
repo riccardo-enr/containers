@@ -76,6 +76,7 @@ stacks:
     layers:
       - clangd
       - ruff
+      - pyright
       - plotjuggler
       - fzf-shell
       - tmux

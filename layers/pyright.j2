@@ -1,0 +1,9 @@
+# --- pyright: Python type-checker / language server -----------------------
+# Routed into the container from host Neovim (the devcontainer-lsp on_new_config
+# wrapper rewrites the LSP cmd to `docker exec`). pyright must resolve ROS Python
+# imports (rclpy, the workspace overlay, ...), so it runs IN-container, not on the
+# host. Node.js comes from ros2-base's nodejs layer; install pyright globally as
+# root (this layer runs before the USER switch) so `pyright-langserver` is on PATH
+# for every user in the image.
+RUN npm install -g pyright \
+    && npm cache clean --force
